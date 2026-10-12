@@ -7,8 +7,10 @@
 
 namespace {
 
-door_display::DoorDisplay display(door_display::kLedPin, door_display::kLedCount);
-door_display::ZigbeeIlluminanceClient illuminanceClient(door_display::kDisplayEndpoint, display);
+    door_display::DoorDisplay display(door_display::kLedPrimaryPin, door_display::kLedSecondaryPin,
+                                      door_display::kLedCount);
+    door_display::ZigbeeIlluminanceClient illuminanceClient(door_display::kDisplayEndpoint,
+                                                            display);
 
 } // namespace
 

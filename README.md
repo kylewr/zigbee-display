@@ -8,7 +8,7 @@ service.
 ## Hardware
 
 - ESP32-C6 SuperMini
-- Five-pixel WS2812/NeoPixel chain on GPIO0
+- Five-pixel WS2812/NeoPixel chain on either GPIO0 or GPIO17
 - Zigbee illuminance and occupancy sensor, currently configured for a SONOFF
   SNZB-03PR2
 - Always-powered Zigbee coordinator
@@ -16,6 +16,9 @@ service.
 Power the LEDs from a suitable external supply and share ground with the C6.
 Use a 3.3 V-compatible first pixel or a level shifter if the LED chain requires
 a 5 V data signal.
+
+The same firmware drives both GPIO0 and GPIO17. Connect the chain only to the
+pin used by that display; the other output is harmlessly unused.
 
 ## How it works
 
