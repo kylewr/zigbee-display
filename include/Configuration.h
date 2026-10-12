@@ -24,6 +24,7 @@ namespace door_display {
     constexpr uint32_t kBindingSearchIntervalMs = 10'000;
     constexpr uint32_t kLuxReadIntervalMs = 10'000;
     constexpr uint32_t kLoopDelayMs = 50;
+    constexpr uint32_t kStartupAnimationDurationMs = 1'000;
     constexpr uint32_t kStatusSweepHalfCycleMs = 600;
 
 } // namespace door_display

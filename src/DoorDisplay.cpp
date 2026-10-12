@@ -16,7 +16,8 @@ namespace door_display {
         secondaryPixels_.begin();
         primaryPixels_.clear();
         secondaryPixels_.clear();
-        showState(State::Joining, statusSweepPixel(millis()));
+        startupAnimationStartedMs_ = millis();
+        showStartupAnimation(0);
     }
 
     void DoorDisplay::recordIlluminance(uint16_t rawValue) {
@@ -50,6 +51,15 @@ namespace door_display {
     }
 
     void DoorDisplay::update(bool zigbeeConnected) {
+        const uint32_t now = millis();
+        const uint32_t startupElapsedMs = now - startupAnimationStartedMs_;
+        if (startupElapsedMs < kStartupAnimationDurationMs) {
+            showStartupAnimation(startupElapsedMs);
+            return;
+        }
+        const bool startupJustFinished = !startupAnimationFinished_;
+        startupAnimationFinished_ = true;
+
         bool haveLux;
         bool isLight;
         bool motionDetected;
@@ -63,7 +73,7 @@ namespace door_display {
 
         State state = State::Joining;
         if (zigbeeConnected) {
-            const bool stale = !haveLux || (millis() - lastReportMs > DOOR_STALE_SECONDS * 1000UL);
+            const bool stale = !haveLux || (now - lastReportMs > DOOR_STALE_SECONDS * 1000UL);
             // Lux is authoritative. Motion can show yellow only when the last lux
             // state is not light; it never changes isLight or the lux timestamp.
             state = (haveLux && isLight) ? State::Light
@@ -72,9 +82,10 @@ namespace door_display {
                                          : State::Dark;
         }
 
-        const uint8_t statusPixel = statusSweepPixel(millis());
+        const uint8_t statusPixel = statusSweepPixel(now);
         const bool isStatusState = state == State::Joining || state == State::Stale;
-        if (state != previousState_ || (isStatusState && statusPixel != previousStatusPixel_)) {
+        if (startupJustFinished || state != previousState_ ||
+            (isStatusState && statusPixel != previousStatusPixel_)) {
             showState(state, statusPixel);
             previousState_ = state;
             previousStatusPixel_ = statusPixel;
@@ -100,6 +111,21 @@ namespace door_display {
             elapsedMs = fullCycleMs - elapsedMs;
         }
         return static_cast<uint8_t>(elapsedMs * (ledCount - 1U) / kStatusSweepHalfCycleMs);
+    }
+
+    void DoorDisplay::showStartupAnimation(uint32_t elapsedMs) {
+        const uint16_t ledCount = primaryPixels_.numPixels();
+        const uint16_t hueOffset =
+            static_cast<uint16_t>(elapsedMs * 65536UL / kStartupAnimationDurationMs);
+        for (uint16_t pixel = 0; pixel < ledCount; ++pixel) {
+            const uint16_t hue =
+                static_cast<uint16_t>(hueOffset + (65536UL * pixel / ledCount));
+            const uint32_t color = primaryPixels_.gamma32(primaryPixels_.ColorHSV(hue));
+            primaryPixels_.setPixelColor(pixel, color);
+            secondaryPixels_.setPixelColor(pixel, color);
+        }
+        primaryPixels_.show();
+        secondaryPixels_.show();
     }
 
     void DoorDisplay::showState(State state, uint8_t statusPixel) {

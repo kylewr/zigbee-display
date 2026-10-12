@@ -21,6 +21,7 @@ namespace door_display {
 
             static uint16_t luxToZcl(unsigned lux);
             uint8_t statusSweepPixel(uint32_t now) const;
+            void showStartupAnimation(uint32_t elapsedMs);
             void showState(State state, uint8_t statusPixel);
 
             Adafruit_NeoPixel primaryPixels_;
@@ -30,6 +31,8 @@ namespace door_display {
             bool isLight_ = false;
             bool motionDetected_ = false;
             uint32_t lastReportMs_ = 0;
+            uint32_t startupAnimationStartedMs_ = 0;
+            bool startupAnimationFinished_ = false;
             State previousState_ = State::Joining;
             uint8_t previousStatusPixel_ = 0;
     };
