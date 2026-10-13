@@ -16,6 +16,7 @@ namespace {
 
 void setup() {
     Serial.begin(115200);
+    display.begin();
 
     illuminanceClient.setManufacturerAndModel("ZigbeeDisplay", "DoorLuxV1");
     illuminanceClient.setPowerSource(ZB_POWER_SOURCE_MAINS);
@@ -33,7 +34,6 @@ void setup() {
         ESP.restart();
     }
 
-    display.begin();
 }
 
 void loop() {

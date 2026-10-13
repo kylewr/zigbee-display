@@ -18,7 +18,7 @@ namespace door_display {
     constexpr uint8_t kDisplayEndpoint = 10;
     // Both outputs carry the same data so one firmware supports either display wiring.
     constexpr uint8_t kLedPrimaryPin = 0;
-    constexpr uint8_t kLedSecondaryPin = 17;
+    constexpr uint8_t kLedSecondaryPin = 14;
     constexpr uint8_t kLedCount = 5;
     constexpr uint64_t kSensorIeee = static_cast<uint64_t>(DOOR_SENSOR_IEEE);
     constexpr uint32_t kBindingSearchIntervalMs = 10'000;

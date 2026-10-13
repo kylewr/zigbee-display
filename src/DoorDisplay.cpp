@@ -16,8 +16,7 @@ namespace door_display {
         secondaryPixels_.begin();
         primaryPixels_.clear();
         secondaryPixels_.clear();
-        startupAnimationStartedMs_ = millis();
-        showStartupAnimation(0);
+        showState(State::Joining, 0);
     }
 
     void DoorDisplay::recordIlluminance(uint16_t rawValue) {
@@ -52,13 +51,6 @@ namespace door_display {
 
     void DoorDisplay::update(bool zigbeeConnected) {
         const uint32_t now = millis();
-        const uint32_t startupElapsedMs = now - startupAnimationStartedMs_;
-        if (startupElapsedMs < kStartupAnimationDurationMs) {
-            showStartupAnimation(startupElapsedMs);
-            return;
-        }
-        const bool startupJustFinished = !startupAnimationFinished_;
-        startupAnimationFinished_ = true;
 
         bool haveLux;
         bool isLight;
@@ -82,10 +74,9 @@ namespace door_display {
                                          : State::Dark;
         }
 
-        const uint8_t statusPixel = statusSweepPixel(now);
-        const bool isStatusState = state == State::Joining || state == State::Stale;
-        if (startupJustFinished || state != previousState_ ||
-            (isStatusState && statusPixel != previousStatusPixel_)) {
+        const uint8_t statusPixel = state == State::Stale ? statusSweepPixel(now) : 0;
+        if (state != previousState_ ||
+            (state == State::Stale && statusPixel != previousStatusPixel_)) {
             showState(state, statusPixel);
             previousState_ = state;
             previousStatusPixel_ = statusPixel;
@@ -113,13 +104,13 @@ namespace door_display {
         return static_cast<uint8_t>(elapsedMs * (ledCount - 1U) / kStatusSweepHalfCycleMs);
     }
 
-    void DoorDisplay::showStartupAnimation(uint32_t elapsedMs) {
+    void DoorDisplay::showStaticRainbow() {
+        primaryPixels_.clear();
+        secondaryPixels_.clear();
+
         const uint16_t ledCount = primaryPixels_.numPixels();
-        const uint16_t hueOffset =
-            static_cast<uint16_t>(elapsedMs * 65536UL / kStartupAnimationDurationMs);
         for (uint16_t pixel = 0; pixel < ledCount; ++pixel) {
-            const uint16_t hue =
-                static_cast<uint16_t>(hueOffset + (65536UL * pixel / ledCount));
+            const uint16_t hue = static_cast<uint16_t>(65536UL * pixel / ledCount);
             const uint32_t color = primaryPixels_.gamma32(primaryPixels_.ColorHSV(hue));
             primaryPixels_.setPixelColor(pixel, color);
             secondaryPixels_.setPixelColor(pixel, color);
@@ -129,6 +120,12 @@ namespace door_display {
     }
 
     void DoorDisplay::showState(State state, uint8_t statusPixel) {
+        if (state == State::Joining) {
+            // Each pixel has a fixed, distinct hue while Zigbee starts or joins.
+            showStaticRainbow();
+            return;
+        }
+
         primaryPixels_.clear();
         secondaryPixels_.clear();
 
@@ -136,12 +133,10 @@ namespace door_display {
         bool fillStrip = false;
         switch (state) {
             case State::Joining:
-                // Pinging the Zigbee network sweeps a single amber status pixel.
-                color = primaryPixels_.Color(255, 96, 0);
                 break;
             case State::Stale:
-                // A missing lux report sweeps a single magenta fault pixel.
-                color = primaryPixels_.Color(255, 0, 255);
+                // A missing lux report sweeps a half-brightness magenta pixel.
+                color = primaryPixels_.Color(128, 0, 128);
                 break;
             case State::Dark:
                 color = primaryPixels_.Color(0, 0, 12);

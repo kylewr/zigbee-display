@@ -65,14 +65,14 @@ to reset pairing.
 
 | Display | Meaning |
 | --- | --- |
-| Rainbow | Startup LED-addressing check |
-| Sweeping amber dot | Joining or searching for the Zigbee network |
-| Sweeping magenta dot | Joined, but no recent valid lux report |
+| Static rainbow | Starting or joining Zigbee |
+| Sweeping dim magenta dot | Joined, but no recent valid lux report |
 | Dim blue | Dark |
 | Solid red | Light |
 | Solid yellow | Motion detected with dark/unknown lux |
 
-Lux is authoritative: motion does not override a
+The error dot travels from the first pixel to the last in 600 ms and takes
+another 600 ms to return. Lux is authoritative: motion does not override a
 known light state. Readings between the configured dark and light thresholds
 retain the previous light state; `0xffff` is ignored as invalid.
 
